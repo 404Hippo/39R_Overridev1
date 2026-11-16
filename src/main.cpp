@@ -11,13 +11,6 @@ void initialize() {
         }
     });
 
-    pros::Task intakeTask([]{
-        while (true) {
-            setIntake(Intake); 
-            pros::delay(10);
-        }
-    });
-
     dr4bLeft.reset_position();
     dr4bRight.reset_position();
 
@@ -28,7 +21,19 @@ void initialize() {
         }
     });
 
-    clawpivot.set_value(true);
+    pros::Task dr4bHomeTask([] {
+    while (true) {
+        if (dr4bHomeRequested) {
+            dr4bHomeRequested = false;
+            homeDR4B();
+        }
+            pros::delay(10);
+        }
+    });
+
+    willy.set_value(false);
+    toggle.set_value(true);
+    claw.set_value(true);
 
 }
 
@@ -37,7 +42,7 @@ void disabled() {}
 void competition_initialize() {}
 
 void autonomous() {
-    test();
+    skills();
 }
 
 void opcontrol() {
@@ -49,14 +54,26 @@ void opcontrol() {
         leftMotors.move(computeY(leftY, driveConst));
         rightMotors.move(computeY(rightY, driveConst));
 
-        // Intake Control
-        Intake = (controller.get_digital(DIGITAL_R1) - controller.get_digital(DIGITAL_R2)) * 12000;
-
         DR4B = (controller.get_digital(DIGITAL_L1) - controller.get_digital(DIGITAL_L2)) * 12000;
 
         if (controller.get_digital_new_press(DIGITAL_Y)) {
-            clawtop.toggle();
-            clawbottom.toggle();
+            claw.toggle();
+        }
+
+        if (controller.get_digital_new_press(DIGITAL_A)) {
+            willy.toggle();
+        }
+
+        if (controller.get_digital_new_press(DIGITAL_R1)) {
+            toggle.set_value(true);
+        }
+        else if (controller.get_digital_new_press(DIGITAL_R2)) {
+            toggle.set_value(false);
+        }
+
+        if (controller.get_digital_new_press(DIGITAL_RIGHT)) {
+            setDR4B(0);
+            DR4Bhome();
         }
 
 
